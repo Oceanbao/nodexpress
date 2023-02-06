@@ -25,4 +25,9 @@ npm i -D @types/express
 # Test
 npm i -D jest @types/jest ts-jest
 npm i -D supertest @types/supertest
+
 ```
+
+## Install
+
+`pnpm install`
