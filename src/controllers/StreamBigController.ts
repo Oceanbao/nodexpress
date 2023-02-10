@@ -1,6 +1,30 @@
 import fs from 'fs'
 import { NextFunction, Request, Response, Router } from 'express'
+import csv from 'csvtojson'
+import { pipeline, Readable, Transform, Writable } from 'stream'
+
 export const StreamBigController: Router = Router()
+
+StreamBigController.get(
+  '/csv',
+  async (req: Request, res: Response, next: NextFunction) => {
+    const inputStream = fs.createReadStream('./users.csv')
+    const outputStream = fs.createWriteStream('./users.ndjson')
+    const csvParser = csv()
+
+    try {
+      inputStream
+        .pipe(csvParser)
+        .pipe(transformStream)
+        .pipe(res)
+        .on('finish', () => {
+          console.log('FIN')
+        })
+    } catch (e) {
+      next(e)
+    }
+  }
+)
 
 StreamBigController.get(
   '/create',
@@ -66,3 +90,20 @@ StreamBigController.get(
     }
   }
 )
+
+const transformStream = new Transform({
+  transform(chunk, encoding, cb) {
+    try {
+      let person = Object.assign({}, JSON.parse(chunk))
+      person = {
+        id: person.id,
+        firstName: person.firstName,
+        lastName: person.lastName,
+        emailBusiness: person.email2
+      }
+      cb(null, JSON.stringify(person) + '\n')
+    } catch (err: unknown) {
+      cb(err as Error)
+    }
+  }
+})
